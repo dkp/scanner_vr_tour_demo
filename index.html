@@ -1,0 +1,224 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <style>
+      iframe {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 50%;
+        height: 100%;
+        border: black solid 2px;
+      }
+
+      #audio {
+        position: absolute;
+        bottom: 0px;
+        right: 0px;
+      }
+
+      #audio img {
+        height: 40px;
+        border-radius: 10px;
+      }
+
+      #audioOn {
+        border: #1e94aa solid 2px;
+      }
+      #audioOff {
+        border: #e37081 solid 2px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script>
+      console.log("changed")
+      // create function that loads an iframe of the popout page in this page
+      let createTextPopout = (filehtml) => {
+        // test with just loading the art_popout_bootstrap.html
+        let iframeElement = document.createElement("iframe");
+        iframeElement.src = filehtml;
+        document.body.append(iframeElement);
+        // bind the close button
+        // recursive timeout till selection passes
+        let closeInt = setInterval(() => {
+          let btn = iframeElement.contentDocument.querySelector("button");
+          if (btn) {
+            // add image to close it
+            // ignoring old png based x
+            let xPopoutIcon = document.createElement("img");
+            xPopoutIcon.src =
+              "x.svg";
+            iframeElement.contentDocument.body.append(xPopoutIcon);
+            xPopoutIcon.style.position = "absolute";
+            xPopoutIcon.style.top = "0px";
+            xPopoutIcon.style.right = "0px";
+            xPopoutIcon.addEventListener("click", () => {
+              document.querySelector("iframe").remove();
+            });
+
+            btn.addEventListener("click", () => {
+              document.querySelector("iframe").remove();
+            });
+            clearInterval(closeInt);
+          }
+        }, 1000);
+        iframeElement.contentDocument
+          .querySelector("button")
+          .addEventListener("click", () => {
+            document.querySelector("iframe").remove();
+          });
+      };
+    </script>
+    <script>
+      AFRAME.registerComponent("anchor-reader", {
+        schema: {
+          anchorName: { type: "string" },
+        },
+        init: function () {
+          var match_name = function() {
+            var mesh = this.el.getObject3D("mesh") // might need to specify the name actually
+            console.log("this mesh is the one we loaded",mesh)
+            // can search the children for a name matching anchorName
+            // then get the circle within the entity and set the rotation and translation on that
+            let infoCircle = this.el.children[0]
+            for (let anchor of mesh.children) {
+              if (anchor.name == this.data.anchorName) {
+                infoCircle.object3D.position.x = anchor.position.x
+                infoCircle.object3D.position.y = anchor.position.y
+                infoCircle.object3D.position.z = anchor.position.z
+                infoCircle.object3D.rotation.set(anchor.rotation)
+                
+              }
+            }
+            
+          }
+          match_name = match_name.bind(this)
+          // here we iterate over the model if it's finished loading and then introduce
+          this.el.addEventListener("model-loaded",match_name)
+        },
+      });
+      AFRAME.registerComponent("mlisten", {
+        schema: {
+          popoutInnerHTML: { type: "string" },
+        },
+        init: function () {
+          let el = this.el;
+          let popout_html_file = this.data.popoutInnerHTML;
+          this.el.addEventListener("mouseenter", function (e) {
+            // play with emissivity
+            el.setAttribute("material", "color", "#5ef7ff");
+            //el.setAttribute("material","emissiveIntensity","1")
+          });
+          this.el.addEventListener("mouseleave", function () {
+            //el.setAttribute("material", "emissiveIntensity",'.2')
+            el.setAttribute("material", "color", "white");
+          });
+          // this is if the html file was what was put in
+          //
+          this.el.addEventListener("click", function () {
+            console.log("cilcked on info");
+
+            // load whatever popout is needed for this part
+            if (popout_html_file !== "movement") {
+              createTextPopout(popout_html_file);
+            } else {
+              //move icon trannsfer to adjacent scene
+              //remove current scene and call new basic scene create
+              document.querySelector("a-scene").remove();
+              let basicscene = basicScene("art-one");
+              basicscene.create();
+            }
+          });
+        },
+      });
+    </script>
+
+    <div id="loaderHolder">
+      <div class="loader"></div>
+    </div>
+    <style>
+      #loaderHolder {
+          height: 100%;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+      }
+
+      .loader {
+          border: 16px solid #f3f3f3;
+          /* Light grey */
+          border-top: 16px solid #3498db;
+          /* Blue */
+          border-radius: 50%;
+          width: 120px;
+          height: 120px;
+          animation: spin 2s linear infinite;
+      }
+
+      @keyframes spin {
+          0% {
+              transform: rotate(0deg);
+          }
+
+          100% {
+              transform: rotate(360deg);
+          }
+    </style>
+    <a-scene
+      loading-screen="dotsColor: black; backgroundColor: white"
+      cursor="rayOrigin: mouse"
+    >
+      <a-assets>
+        <img
+          id="360-image"
+          src="https://cdn.glitch.global/13f55c7a-7b3d-4eb7-86fd-c30f1292770c/Output_Q360_20240228_110438_00000H.JPG"
+        />
+        <a-asset-item
+          id="anchors"
+          src="anchor.glb"
+        ></a-asset-item>
+      </a-assets>
+      <!--        adding in a entity that holds the camera, this is preferable to adding a simple camera as it allows for more extension later -->
+      <a-entity
+        id="maincam"
+        rotation="0 0 0"
+        position="0 0 0"
+      >
+        <a-camera look-controls></a-camera>
+      </a-entity>
+      <a-entity anchor-reader="anchorName:computer" gltf-model="#anchors">
+        <!--           this way we can ignore needing to set the position on each of the actual circles, and just ensure that they go to the right named anchor -->
+        <!--           note that we will need to specify the correct popout.htmls for each also -->
+<!--         mlisten="popoutInnerHTML:popout.html" put this back in when we are done -->
+        <a-circle
+          animation="property:material.emissive;to:#D2A5A5;dir:alternate;easing:linear;dur:1000;loop:true"
+          material="emissive: #000000;emissiveIntensity: .3;side: double;src:
+        https://cdn.glitch.global/13f55c7a-7b3d-4eb7-86fd-c30f1292770c/reshot-icon-info-6L3YW8GE9H.svg"
+          
+        ></a-circle>
+      </a-entity>
+      <!-- this is the element that controls the popout dynamics  the mlisten is a component we defined to react to mouse over and click events-->
+      
+      <a-sky src="#360-image"></a-sky>
+    </a-scene>
+
+    <div id="exit">
+      <img
+        style="
+          position: absolute;
+          top: 0px;
+          right: 0px;
+          border: black solid;
+          border-radius: 10px;
+          background: white;
+        "
+        onclick="window.close()"
+        src="https://cdn.glitch.global/13f55c7a-7b3d-4eb7-86fd-c30f1292770c/reshot-icon-x-XL3PMTW87F-17ba4.svg"
+        alt=""
+      />
+    </div>
+  </body>
+</html>
