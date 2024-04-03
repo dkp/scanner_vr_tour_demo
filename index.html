@@ -77,18 +77,18 @@
                     console.log("this mesh is the one we loaded", mesh)
                     // can search the children for a name matching anchorName
                     // then get the circle within the entity and set the rotation and translation on that
-                    let circle = this.el.children[0]
+                    let infoCircle = this.el.children[0]
                     for (let anchor of mesh.children) {
                         if (anchor.name == this.data.anchorName) {
-                            // now we move the circle from it's default origin position to the location of the anchor we set up in blender
-                            circle.object3D.position.copy(anchor.position)
-                            circle.object3D.rotation.copy(anchor.rotation)
+                            // unfortunate change of how values are handled between blender's zup and threejs y up
+                            // because we switched systems we have to invert the x, and then change which is z vs y, and then make the rotation use y instead of z, the same kinds of inversions are probably used if needing to handle other kinds of rotation, but for eye level info buttons this should be enough
+                            infoCircle.object3D.position.copy(anchor.position)
+                            infoCircle.object3D.rotation.copy(anchor.rotation)
 
                         }
                     }
 
                 }
-                // javascript fancyness to make sure that we can use things like "this" and have it mean the actual aframe entity within the match_name function, we do this so that we can set up a call back when the model actually finishes loading to move the circles to the matching anchors
                 match_name = match_name.bind(this)
                 // here we iterate over the model if it's finished loading and then introduce
                 this.el.addEventListener("model-loaded", match_name)
@@ -164,6 +164,7 @@
             100% {
                 transform: rotate(360deg);
             }
+        }
     </style>
     <!-- this is the parent of the entire vr tour scene -->
     <!-- since we want the mouse to trigger things we set up the cursor this way, then we can trigger things like mouse interactions on elements we customized to listen -->
@@ -179,14 +180,14 @@
             <img id="info" src="info.png" />
             <img id="arrow" src="arrow.png" />
             <a-asset-item id="anchors" src="anchor.glb"></a-asset-item>
+            <a-asset-item id="box" src="box_test.glb"></a-asset-item>
         </a-assets>
 
 
 
         <!--        adding in a entity that holds the camera, this is preferable to adding a simple camera as it allows for more extension later -->
-        <!-- for whatever reason in blender the camera uses a different coordinate system, so the no rotation aplied means that the cam looks down the blender y axis -->
-        <tity id="maincam" rotation="0 -180 0" position="0 0 0">
-            <!-- we add the look controls button so that things like clicking and dragging can move things around -->
+        for whatever reason in blender the camera uses a different coordinate system, so the no rotation aplied means that the cam looks down the blender y axis
+        <a-entity id="maincam" rotation="0 -180 0" position="0 0 0">
             <a-camera look-controls></a-camera>
         </a-entity>
 
