@@ -27,8 +27,7 @@
             iframeElement.src = filehtml;
             document.body.append(iframeElement);
             // bind the close button
-            // recursive timeout till selection passes
-            // TODO check if this actually does anything right now
+            // recursive timeout makes sure tthe icon is delayed for a moment to be added to the upper right corner
             let closeInt = setInterval(() => {
                 let btn = iframeElement.contentDocument.querySelector("button");
                 if (btn) {
@@ -188,7 +187,8 @@
 
 
         <!--        adding in a entity that holds the camera, this is preferable to adding a simple camera as it allows for more extension later -->
-        for whatever reason in blender the camera uses a different coordinate system, so the no rotation aplied means that the cam looks down the blender y axis
+        <!-- for whatever reason in blender the camera uses a different coordinate system, so the no rotation aplied means that the cam looks down the blender y axis -->
+        <!-- TODO think about a way to update the camera's orientation using an empty from blender also -->
         <a-entity id="maincam" rotation="0 -180 0" position="0 0 0">
             <a-camera look-controls></a-camera>
         </a-entity>
