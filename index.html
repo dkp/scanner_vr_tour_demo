@@ -1,8 +1,10 @@
 <html>
 
 <head>
+    <!-- this imports the aframe package that we use for web vr -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <style>
+        /* these will help ensure that the popout positions correctly on the lhs of the screen */
         iframe {
             position: absolute;
             top: 0px;
@@ -11,39 +13,22 @@
             height: 100%;
             border: black solid 2px;
         }
-
-        #audio {
-            position: absolute;
-            bottom: 0px;
-            right: 0px;
-        }
-
-        #audio img {
-            height: 40px;
-            border-radius: 10px;
-        }
-
-        #audioOn {
-            border: #1e94aa solid 2px;
-        }
-
-        #audioOff {
-            border: #e37081 solid 2px;
-        }
     </style>
 </head>
 
 <body>
     <script>
-        console.log("changed")
         // create function that loads an iframe of the popout page in this page
         let createTextPopout = (filehtml) => {
-            // test with just loading the art_popout_bootstrap.html
+            // generates a sub page on the current web vr view, it isn't actually a vr page now. 
+            // TODO check what this looks like in a headset, it's probably not good?
             let iframeElement = document.createElement("iframe");
+            // use the html that was passed in when we called this function
             iframeElement.src = filehtml;
             document.body.append(iframeElement);
             // bind the close button
             // recursive timeout till selection passes
+            // TODO check if this actually does anything right now
             let closeInt = setInterval(() => {
                 let btn = iframeElement.contentDocument.querySelector("button");
                 if (btn) {
@@ -52,6 +37,7 @@
                     let xPopoutIcon = document.createElement("img");
                     xPopoutIcon.src =
                         "x.svg";
+                        // various positioning code to make sure that the iframe is on the far left
                     iframeElement.contentDocument.body.append(xPopoutIcon);
                     xPopoutIcon.style.position = "absolute";
                     xPopoutIcon.style.top = "0px";
@@ -66,6 +52,7 @@
                     clearInterval(closeInt);
                 }
             }, 1000);
+            // ensure that we have the option to close the popout also
             iframeElement.contentDocument
                 .querySelector("button")
                 .addEventListener("click", () => {
@@ -74,40 +61,52 @@
         };
     </script>
     <script>
+        // this is a Aframe component, it allows us to extend the basic entities so that they can do custom things like work with 3d models from blender for example
+        // this anchor-reader is the name of the component we will define like an html element attribute (shown later), and the rest of the definition allows us to set up the types of input the component can accept and how it should initialize
+        // we will actually be using this to reposition the aframe entities that we place inside of the entity, in our case this will mostly be little circles that either hold the info or the movement icon
+        // you will have the option to customize the kind of behavior that each on triggers through the mlisten component defined later
         AFRAME.registerComponent("anchor-reader", {
             schema: {
+                // accept our input as the name of the empty from the blender file that we used to more intuitively position the info and movement icons
                 anchorName: { type: "string" },
             },
             init: function () {
+                // this is the function that we will use to update the location of the child
                 var match_name = function () {
                     var mesh = this.el.getObject3D("mesh") // might need to specify the name actually
                     console.log("this mesh is the one we loaded", mesh)
                     // can search the children for a name matching anchorName
                     // then get the circle within the entity and set the rotation and translation on that
-                    let infoCircle = this.el.children[0]
+                    let circle = this.el.children[0]
                     for (let anchor of mesh.children) {
                         if (anchor.name == this.data.anchorName) {
-                            // unfortunate change of how values are handled between blender's zup and threejs y up
-                            // because we switched systems we have to invert the x, and then change which is z vs y, and then make the rotation use y instead of z, the same kinds of inversions are probably used if needing to handle other kinds of rotation, but for eye level info buttons this should be enough
-                            infoCircle.object3D.position.copy(anchor.position)
-                            infoCircle.object3D.rotation.copy(anchor.rotation)
+                            // now we move the circle from it's default origin position to the location of the anchor we set up in blender
+                            circle.object3D.position.copy(anchor.position)
+                            circle.object3D.rotation.copy(anchor.rotation)
 
                         }
                     }
 
                 }
+                // javascript fancyness to make sure that we can use things like "this" and have it mean the actual aframe entity within the match_name function, we do this so that we can set up a call back when the model actually finishes loading to move the circles to the matching anchors
                 match_name = match_name.bind(this)
                 // here we iterate over the model if it's finished loading and then introduce
                 this.el.addEventListener("model-loaded", match_name)
             },
         });
+        //This component is similarly defined but accomplishes a different kind of action. It lets us click on icons and open popups. Another component will be defined that lets us move to a different scene also
         AFRAME.registerComponent("mlisten", {
             schema: {
-                popoutInnerHTML: { type: "string" },
+                htmlFile: { type: "string" },
+                movement: { type: "boolean" }
             },
             init: function () {
+                // simplify reference to the entity in code
                 let el = this.el;
-                let popout_html_file = this.data.popoutInnerHTML;
+                // the input provided by the component defined on the entity
+                let htmlFile = this.data.htmlFile;
+                let movement = this.data.movement
+                // callbacks setup to handle behavior from different mousing interactions
                 this.el.addEventListener("mouseenter", function (e) {
                     // play with emissivity
                     el.setAttribute("material", "color", "#5ef7ff");
@@ -121,22 +120,19 @@
                 //
                 this.el.addEventListener("click", function () {
                     console.log("cilcked on info");
-
-                    // load whatever popout is needed for this part
-                    if (popout_html_file !== "movement") {
-                        createTextPopout(popout_html_file);
+                    // check if we are supposed to move when we trigger this click
+                    if (movement) {
+                        // move to a different scene
+                        window.location.href = './${htmlFile}'
                     } else {
-                        //move icon trannsfer to adjacent scene
-                        //remove current scene and call new basic scene create
-                        document.querySelector("a-scene").remove();
-                        let basicscene = basicScene("art-one");
-                        basicscene.create();
+                        // load whatever popout is needed for this part
+                        createTextPopout(htmlFile);
                     }
                 });
             },
         });
     </script>
-
+    <!-- this holds the spinner when the scene is loading instead of just showing a blank page -->
     <div id="loaderHolder">
         <div class="loader"></div>
     </div>
@@ -159,7 +155,7 @@
             height: 120px;
             animation: spin 2s linear infinite;
         }
-
+        /* makes sure the loading screen animates */
         @keyframes spin {
             0% {
                 transform: rotate(0deg);
@@ -169,36 +165,54 @@
                 transform: rotate(360deg);
             }
     </style>
+    <!-- this is the parent of the entire vr tour scene -->
+    <!-- since we want the mouse to trigger things we set up the cursor this way, then we can trigger things like mouse interactions on elements we customized to listen -->
     <a-scene loading-screen="dotsColor: black; backgroundColor: white" cursor="rayOrigin: mouse">
 
 
+        <!-- this is where we load in the various things we will use for the scene
+        * 360 image gets placed on the sky entity
+        * the info and arrow icons get used on the circles placed around the scene
+        * the anchors glb is a file that we used to make sure the elements got placed in the right locations when Aframe starts -->
         <a-assets>
-            <img id="360-image"
-                src="360.JPG" />
+            <img id="360-image" src="360.JPG" />
             <img id="info" src="info.png" />
+            <img id="arrow" src="arrow.png" />
             <a-asset-item id="anchors" src="anchor.glb"></a-asset-item>
-            <a-asset-item id="box" src="box_test.glb"></a-asset-item>
         </a-assets>
+
+
+
         <!--        adding in a entity that holds the camera, this is preferable to adding a simple camera as it allows for more extension later -->
-        for whatever reason in blender the camera uses a different coordinate system, so the no rotation aplied means that the cam looks down the blender y axis
-        <a-entity gltf-model="#box"></a-entity>
-        <a-entity id="maincam" rotation="0 -180 0" position="0 0 0">
+        <!-- for whatever reason in blender the camera uses a different coordinate system, so the no rotation aplied means that the cam looks down the blender y axis -->
+        <tity id="maincam" rotation="0 -180 0" position="0 0 0">
+            <!-- we add the look controls button so that things like clicking and dragging can move things around -->
             <a-camera look-controls></a-camera>
         </a-entity>
+
+
+        <!-- here's the fun parts, we are using an entity and putting a different entity inside it
+        this lets us add our custom anchor-reader to the thing that loads the anchors model
+        then our anchor reader is also going to use it's code to update the position and rotation of it's first child,
+        in this case that is the circle element -->
         <a-entity anchor-reader="anchorName:Machine" gltf-model="#anchors">
+
+            <!-- here we define the circle with standard shadeless double sided material using our info icon loaded in the assets, we actually use the id of the asset element to refer to it simply here
+            we will also be using the mlisten component to pass information about what should happen when people interact with the entity using a mouse -->
             <a-circle material="side:double;src:#info;shader:flat"></a-circle>
         </a-entity>
         <a-entity anchor-reader="anchorName:machinedoor" gltf-model="#anchors">
             <a-circle material="side:double;src:#info;shader:flat"></a-circle>
         </a-entity>
         <a-entity anchor-reader="anchorName:enterscanner" gltf-model="#anchors">
-            <a-circle material="side:double;src:#info;shader:flat"></a-circle>
+            <a-circle material="side:double;src:#arrow;shader:flat"></a-circle>
         </a-entity>
         <!-- this is the element that controls the popout dynamics  the mlisten is a component we defined to react to mouse over and click events-->
 
         <a-sky src="#360-image"></a-sky>
     </a-scene>
 
+    <!-- add an exit button in the top left corner of the screen -->
     <div id="exit">
         <img style="
           position: absolute;
