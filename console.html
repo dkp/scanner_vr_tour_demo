@@ -123,7 +123,7 @@
                     // check if we are supposed to move when we trigger this click
                     if (movement) {
                         // move to a different scene
-                        let newUrl = `./${htmlFile}`
+                        let newUrl = `scanner1.html`
                         console.log(newUrl)
                         window.location.href = newUrl
                     } else {
@@ -178,7 +178,7 @@
         * the info and arrow icons get used on the circles placed around the scene
         * the anchors glb is a file that we used to make sure the elements got placed in the right locations when Aframe starts -->
         <a-assets>
-            <img id="360-image" src="360.JPG" />
+            <img id="360-console-image" src="360_console.JPG" />
             <img id="info" src="info.png" />
             <img id="arrow" src="arrow.png" />
             <!-- theres a good chance that it will help you to label the anchors by the scene name since we will be setting up a file like this for all of the individual scenes -->
@@ -212,7 +212,7 @@
         </a-entity>
         <!-- this is the element that controls the popout dynamics  the mlisten is a component we defined to react to mouse over and click events-->
 
-        <a-sky src="#360-image"></a-sky>
+        <a-sky src="#360-console-image"></a-sky>
     </a-scene>
 
     <!-- add an exit button in the top left corner of the screen -->
