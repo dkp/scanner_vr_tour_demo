@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -74,7 +75,7 @@
                 // this is the function that we will use to update the location of the child
                 var match_name = function () {
                     var mesh = this.el.getObject3D("mesh") // might need to specify the name actually
-                    console.log("this mesh is the one we loaded", mesh)
+                    // console.log("this mesh is the one we loaded", mesh)
                     // can search the children for a name matching anchorName
                     // then get the circle within the entity and set the rotation and translation on that
                     let infoCircle = this.el.children[0]
@@ -125,7 +126,7 @@
                     if (movement) {
                         // move to a different scene
                         //let newUrl = `./${htmlFile}`
-                        let newUrl = `./console.html`
+                        let newUrl = `./scanner2.html`
                         console.log(newUrl)
                         window.location.href = newUrl
                     } else {
@@ -214,7 +215,9 @@
         </a-entity>
         <!-- this is the element that controls the popout dynamics  the mlisten is a component we defined to react to mouse over and click events-->
 
-        <a-sky src="#360-scanner_front1-image"></a-sky>
+        <a-sky src="#360-scanner_front1-image"
+            rotation="0 180 0">
+        </a-sky>
     </a-scene>
 
     <!-- add an exit button in the top left corner of the screen -->

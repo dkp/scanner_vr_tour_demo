@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -62,7 +63,7 @@
     </script>
     <script>
         // this is a Aframe component, it allows us to extend the basic entities so that they can do custom things like work with 3d models from blender for example
-        // this anchor-reader is the name of the component we will define like an html element attribute (shown later), and the rest of the definition allows us to set up the types of input the component can accept and how it should initialize
+        // this anchor-reader is the name of the component we will define; like an html element attribute (shown later), and the rest of the definition allows us to set up the types of input the component can accept and how it should initialize
         // we will actually be using this to reposition the aframe entities that we place inside of the entity, in our case this will mostly be little circles that either hold the info or the movement icon
         // you will have the option to customize the kind of behavior that each on triggers through the mlisten component defined later
         AFRAME.registerComponent("anchor-reader", {
@@ -74,7 +75,7 @@
                 // this is the function that we will use to update the location of the child
                 var match_name = function () {
                     var mesh = this.el.getObject3D("mesh") // might need to specify the name actually
-                    console.log("this mesh is the one we loaded", mesh)
+                    // console.log("this mesh is the one we loaded", mesh)
                     // can search the children for a name matching anchorName
                     // then get the circle within the entity and set the rotation and translation on that
                     let infoCircle = this.el.children[0]
@@ -119,10 +120,11 @@
                 // this is if the html file was what was put in
                 //
                 this.el.addEventListener("click", function () {
-                    console.log("cilcked on info");
+                    console.log("clicked on info");
                     // check if we are supposed to move when we trigger this click
                     if (movement) {
                         // move to a different scene
+                        //let newUrl = `./${htmlFile}`
                         let newUrl = `scanner1.html`
                         console.log(newUrl)
                         window.location.href = newUrl
@@ -186,9 +188,8 @@
         </a-assets>
 
 
-
-        <!--        adding in a entity that holds the camera, this is preferable to adding a simple camera as it allows for more extension later -->
-        for whatever reason in blender the camera uses a different coordinate system, so the no rotation aplied means that the cam looks down the blender y axis
+        <!-- adding in a entity that holds the camera, this is preferable to adding a simple camera as it allows for more extension later
+        for whatever reason in blender the camera uses a different coordinate system, so the no rotation aplied means that the cam looks down the blender y axis -->
         <a-entity id="maincam" rotation="0 -180 0" position="0 0 0">
             <a-camera look-controls></a-camera>
         </a-entity>

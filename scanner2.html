@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -74,7 +75,7 @@
                 // this is the function that we will use to update the location of the child
                 var match_name = function () {
                     var mesh = this.el.getObject3D("mesh") // might need to specify the name actually
-                    console.log("this mesh is the one we loaded", mesh)
+                    // console.log("this mesh is the one we loaded", mesh)
                     // can search the children for a name matching anchorName
                     // then get the circle within the entity and set the rotation and translation on that
                     let infoCircle = this.el.children[0]
